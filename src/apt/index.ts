@@ -34,7 +34,6 @@ import {
   parseTaxiNode,
 } from './taxi-routing'
 import { parseRadio } from './radio'
-import { CallbackObjectType } from '../types'
 
 const { insertWays, trafficFlowEnabled, taxiRoutingEnabled } = config
 
