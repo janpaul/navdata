@@ -5,18 +5,39 @@ import { splitShizzle } from '../utils'
 import * as codes from './codes'
 import { parseRunway, parseWaterRunway } from './runway'
 import { parseHelipad } from './helipad'
-import { parseTaxiway, Taxiway } from './taxiway'
-import { CallbackObjectType } from '../types'
-import { Boundary, parseBoundary } from './boundary'
+import { parseTaxiWay, parseBoundaryWay, parseLinearFeature, Way } from './way'
 import { parseNode } from './node'
-import { Viewpoint, parseViewPoint } from './viewpoint'
+import { parseViewPoint } from './viewpoint'
 import { parseStartupLocation } from './startup-location'
+import { parseWindsock } from './windsock'
+import { parseSign } from './sign'
+import config from '../config'
+import { parseLightingObject } from './lights'
+import {
+  parseCeilingRule,
+  parseRunwayInUse,
+  parseTrafficFlow,
+  parseTrafficTimeRule,
+  parseVfrRule,
+  parseVisibilityRule,
+  parseWindRule,
+  TrafficFlow,
+} from './traffic'
+import { CallbackObjectType } from '../types'
+import {
+  parseTaxiEdge,
+  parseTaxiEdgeActiveZone,
+  parseTaxiNode,
+} from './taxi-routing'
+
+const { insertWays, trafficFlowEnabled, taxiRoutingEnabled } = config
 
 type Callback = (CallbackObjectType) => (Airport) => void
 export const createParser = (reader: any) => (callback: Callback) => {
   let airport: Airport | undefined
-  let taxiway: Taxiway | undefined
-  let boundary: Boundary | undefined
+  let way: Way | undefined
+  let trafficFlow: TrafficFlow | undefined
+  const schiphol = () => airport && airport.icao === 'EHAM'
   const parseLine = (line: string) => {
     const [code, ...data] = splitShizzle(line)
     switch (code) {
@@ -48,23 +69,27 @@ export const createParser = (reader: any) => (callback: Callback) => {
         airport.helipads = [..._helipads, parseHelipad(data)]
         break
       }
-      case codes.TAXIWAY: {
-        if (!!taxiway) {
-          const _taxiways = airport.taxiways || []
-          airport.taxiways = [..._taxiways, taxiway]
-          taxiway = undefined
-        } else {
-          taxiway = parseTaxiway(data)
-        }
-        break
-      }
+      case codes.LINEAR_FEATURE:
+      case codes.TAXIWAY:
       case codes.BOUNDARY: {
-        if (!!boundary) {
-          const _boundaries = airport.taxiways || []
-          airport.boundaries = [..._boundaries, boundary]
-          boundary = undefined
-        } else {
-          boundary = parseBoundary(data)
+        if (insertWays) {
+          if (way) {
+            const _ways = airport.ways || []
+            airport.ways = [..._ways, way]
+          }
+          let _parser
+          switch (code) {
+            case codes.TAXIWAY:
+              _parser = parseTaxiWay
+              break
+            case codes.BOUNDARY:
+              _parser = parseBoundaryWay
+              break
+            case codes.LINEAR_FEATURE:
+              _parser = parseLinearFeature
+              break
+          }
+          way = _parser(data)
         }
         break
       }
@@ -74,12 +99,10 @@ export const createParser = (reader: any) => (callback: Callback) => {
       case codes.NODE_BEZIER:
       case codes.NODE_BEZIER_CLOSE_LOOP:
       case codes.NODE_BEZIER_END: {
-        const node = parseNode(code)(data)
-        if (!!taxiway) {
-          taxiway.nodes = [...taxiway.nodes, node]
-        }
-        if (!!boundary) {
-          boundary.nodes = [...boundary.nodes, node]
+        if (insertWays) {
+          const node = parseNode(code)(data)
+          const _nodes = way.nodes || []
+          way.nodes = [..._nodes, node]
         }
         break
       }
@@ -93,6 +116,111 @@ export const createParser = (reader: any) => (callback: Callback) => {
           ..._startupLocations,
           parseStartupLocation(data),
         ]
+        break
+      }
+      case codes.WINDSOCK: {
+        const _windsocks = airport.windsocks || []
+        airport.windsocks = [..._windsocks, parseWindsock(data)]
+        break
+      }
+      case codes.SIGN: {
+        const _signs = airport.signs || []
+        airport.signs = [..._signs, parseSign(data)]
+        break
+      }
+      case codes.LIGHTING_OBJECT: {
+        const _lights = airport.lights || []
+        airport.lights = [..._lights, parseLightingObject(data)]
+        break
+      }
+      case codes.TRAFFIC_FLOW: {
+        if (trafficFlowEnabled) {
+          if (trafficFlow) {
+            const _trafficFlows = airport.trafficFlow || []
+            airport.trafficFlow = [..._trafficFlows, trafficFlow]
+          }
+          trafficFlow = parseTrafficFlow(data)
+        }
+        break
+      }
+      case codes.TRAFFIC_FLOW_WIND_RULE: {
+        if (trafficFlowEnabled) {
+          const _windRules = trafficFlow.windRules || []
+          trafficFlow.windRules = [..._windRules, parseWindRule(data)]
+        }
+        break
+      }
+      case codes.TRAFFIC_FLOW_CEILING_RULE: {
+        if (trafficFlowEnabled) {
+          const _ceilingRules = trafficFlow.ceilingRules || []
+          trafficFlow.ceilingRules = [..._ceilingRules, parseCeilingRule(data)]
+        }
+        break
+      }
+      case codes.TRAFFIC_FLOW_VISIBILITY_RULE: {
+        if (trafficFlowEnabled) {
+          const _visibilityRules = trafficFlow.visibilityRules || []
+          trafficFlow.visibilityRules = [
+            ..._visibilityRules,
+            parseVisibilityRule(data),
+          ]
+        }
+        break
+      }
+      case codes.TRAFFIC_FLOW_TRAFFIC_TIME_RULE: {
+        if (trafficFlowEnabled) {
+          const _trafficTimeRules = trafficFlow.trafficTimeRules || []
+          trafficFlow.trafficTimeRules = [
+            ..._trafficTimeRules,
+            parseTrafficTimeRule(data),
+          ]
+        }
+        break
+      }
+      case codes.TRAFFIC_FLOW_RUNWAY_IN_USE_RULE_A:
+      case codes.TRAFFIC_FLOW_RUNWAY_IN_USE_RULE_B: {
+        if (trafficFlowEnabled && !!trafficFlow) {
+          const _runwayInUseRules = trafficFlow.runwayInUseRules || []
+          trafficFlow.runwayInUseRules = [
+            ..._runwayInUseRules,
+            parseRunwayInUse(data),
+          ]
+        }
+        break
+      }
+      case codes.TRAFFIC_FLOW_VFR_PATTERN_RULE: {
+        if (trafficFlowEnabled) {
+          const _vfrRules = trafficFlow.vfrRules || []
+          trafficFlow.vfrRules = [..._vfrRules, parseVfrRule(data)]
+        }
+        break
+      }
+      case codes.TAXI_ROUTING: {
+        // for readability only, ignore
+        break
+      }
+      case codes.TAXI_ROUTING_NODE: {
+        if (taxiRoutingEnabled) {
+          const _nodes = airport.taxiRouting.nodes
+          airport.taxiRouting.nodes = [..._nodes, parseTaxiNode(data)]
+        }
+        break
+      }
+      case codes.TAXI_ROUTING_EDGE: {
+        if (taxiRoutingEnabled) {
+          const _edges = airport.taxiRouting.edges
+          airport.taxiRouting.edges = [..._edges, parseTaxiEdge(data)]
+        }
+        break
+      }
+      case codes.TAXI_ROUTING_EDGE_ACTIVE_ZONES: {
+        if (taxiRoutingEnabled) {
+          const _edgeActiveZones = airport.taxiRouting.edgeActiveZones
+          airport.taxiRouting.edgeActiveZones = [
+            ..._edgeActiveZones,
+            parseTaxiEdgeActiveZone(data),
+          ]
+        }
         break
       }
     }

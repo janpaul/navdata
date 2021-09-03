@@ -5,6 +5,7 @@ export type MetaData = Record<string, string>
 const validMetaKeys = [
   'faa_code',
   'iata_code',
+  'iata_code',
   'city',
   'country',
   'region_code',

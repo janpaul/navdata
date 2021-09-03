@@ -1,1 +1,1 @@
-export type CallbackObjectType = 'aircraft'
+export type CallbackObjectType = 'airport'
