@@ -8,7 +8,12 @@ import { parseHelipad } from './helipad'
 import { parseTaxiWay, parseBoundaryWay, parseLinearFeature, Way } from './way'
 import { parseNode } from './node'
 import { parseViewPoint } from './viewpoint'
-import { parseStartupLocation } from './startup-location'
+import {
+  parseRampStart,
+  parseStartupLocation,
+  parseStartupLocationNew,
+  parseTruckParking,
+} from './parking'
 import { parseWindsock } from './windsock'
 import { parseSign } from './sign'
 import config from '../config'
@@ -23,12 +28,13 @@ import {
   parseWindRule,
   TrafficFlow,
 } from './traffic'
-import { CallbackObjectType } from '../types'
 import {
   parseTaxiEdge,
   parseTaxiEdgeActiveZone,
   parseTaxiNode,
 } from './taxi-routing'
+import { parseRadio } from './radio'
+import { CallbackObjectType } from '../types'
 
 const { insertWays, trafficFlowEnabled, taxiRoutingEnabled } = config
 
@@ -221,6 +227,42 @@ export const createParser = (reader: any) => (callback: Callback) => {
             parseTaxiEdgeActiveZone(data),
           ]
         }
+        break
+      }
+      case codes.STARTUP_LOCATION_NEW: {
+        const _startupLocations = airport.startupLocations || []
+        airport.startupLocations = [
+          ..._startupLocations,
+          parseStartupLocationNew(data),
+        ]
+        break
+      }
+      case codes.RAMP_START: {
+        const _rampStart = airport.rampStart || []
+        airport.rampStart = [..._rampStart, parseRampStart(data)]
+        break
+      }
+      case codes.TRUCK_PARKING: {
+        const _truckParkings = airport.truckParkings || []
+        airport.truckParkings = [..._truckParkings, parseTruckParking(data)]
+        break
+      }
+      case codes.RADIO_RECORDED_KHZ:
+      case codes.RADIO_UNICOM_KHZ:
+      case codes.RADIO_CLD_KHZ:
+      case codes.RADIO_GND_KHZ:
+      case codes.RADIO_TWR_KHZ:
+      case codes.RADIO_APP_KHZ:
+      case codes.RADIO_DEP_KHZ:
+      case codes.RADIO_RECORDED_MHZ:
+      case codes.RADIO_UNICOM_MHZ:
+      case codes.RADIO_CLD_MHZ:
+      case codes.RADIO_GND_MHZ:
+      case codes.RADIO_TWR_MHZ:
+      case codes.RADIO_APP_MHZ:
+      case codes.RADIO_DEP_MHZ: {
+        const _radios = airport.radios || []
+        airport.radios = [..._radios, parseRadio(code)(data)]
         break
       }
     }

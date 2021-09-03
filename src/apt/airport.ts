@@ -3,12 +3,13 @@ import { Runway, WaterRunway } from './runway'
 import { Helipad } from './helipad'
 import { Way, WayType } from './way'
 import { Viewpoint } from './viewpoint'
-import { StartupLocation } from './startup-location'
+import { StartupLocation, RampStart, TruckParking } from './parking'
 import { Windsock } from './windsock'
 import { Sign } from './sign'
 import { LightingObject } from './lights'
 import { TrafficFlow } from './traffic'
 import { TaxiRouting } from './taxi-routing'
+import { Radio } from './radio'
 import { nameToString } from '../utils'
 
 export type Airport = {
@@ -27,6 +28,9 @@ export type Airport = {
   lights?: LightingObject[]
   trafficFlow?: TrafficFlow[]
   taxiRouting: TaxiRouting
+  rampStart?: RampStart[]
+  truckParkings?: TruckParking[]
+  radios?: Radio[]
 }
 
 export const parseAirport = (data: string[]): Airport => {
