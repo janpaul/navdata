@@ -1,5 +1,7 @@
 import { Location } from '.'
 
+// many thanks to http://www.movable-type.co.uk/scripts/latlong.html
+
 export const haversineDistance = (a: Location, b: Location) => {
   const R = 6371e3 // metres
   const φ1 = (a.lat * Math.PI) / 180 // φ, λ in radians
