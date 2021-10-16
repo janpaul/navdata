@@ -1,5 +1,5 @@
 import { Surface, toSurface } from './surface'
-import { toDegrees, toLength } from '../utils'
+import { toDegrees, toLength, toLocation, haversineDistance } from '../utils'
 import { Shoulder, toShoulder } from './shoulder'
 
 type SingleDirectionRunway = {
@@ -13,6 +13,7 @@ export type Runway = {
   width: number
   surface: Surface
   shoulder: Shoulder
+  length?: number
 } & SingleDirectionRunway
 export type WaterRunway = {
   width: number
@@ -32,6 +33,16 @@ const toRunwayData = (data: string[]): SingleDirectionRunway => {
   }
 }
 
+const calculateRunwayLength = (adata: string[], bdata: string[]): number => {
+  const [, slata, slona] = adata
+  const [, slatb, slonb] = bdata
+  const lata = Number(slata)
+  const lona = Number(slona)
+  const latb = Number(slatb)
+  const lonb = Number(slonb)
+  return haversineDistance(toLocation(lata, lona), toLocation(latb, lonb))
+}
+
 export const parseRunway = (data: string[]): [Runway, Runway] => {
   const [width, surface, shoulder] = data
   const adata = [...data].slice(7, 12)
@@ -41,8 +52,9 @@ export const parseRunway = (data: string[]): [Runway, Runway] => {
     surface: toSurface(surface),
     shoulder: toShoulder(shoulder),
   }
-  const a: Runway = { ...common, ...toRunwayData(adata) }
-  const b: Runway = { ...common, ...toRunwayData(bdata) }
+  const length = calculateRunwayLength(adata, bdata)
+  const a: Runway = { ...common, ...toRunwayData(adata), length }
+  const b: Runway = { ...common, ...toRunwayData(bdata), length }
   return [a, b]
 }
 
