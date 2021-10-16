@@ -55,5 +55,6 @@ const callback =
       }
     }
   }
-// createAirportParser(airportReader)(callback)
+
+createAirportParser(airportReader)(callback)
 createNavParser(navReader)(callback)
