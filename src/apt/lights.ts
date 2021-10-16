@@ -1,4 +1,5 @@
-import { toDegrees, toHeading } from '../utils'
+import { Location } from '../types'
+import { toDegrees, toHeading, toLocation } from '../utils'
 
 export type CenterLights = 'yes' | 'none'
 export type EdgeLights = 'medium_intensity' | 'none'
@@ -9,8 +10,7 @@ export type LightingObjectCode =
   | 'VASI tri-color'
   | 'WIGWAG'
 export type LightingObject = {
-  lat: number
-  lon: number
+  location: Location
   code: LightingObjectCode
   orientation: number
   glidescopeAngle: number
@@ -33,8 +33,7 @@ const lightingObjectCodeMapping: Record<string, LightingObjectCode> = {
 export const parseLightingObject = (data: string[]): LightingObject => {
   const [lat, lon, code, orientation, glidescopeAngle, runway] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     orientation: toHeading(orientation),
     code: lightingObjectCodeMapping[code],
     glidescopeAngle: toHeading(glidescopeAngle),

@@ -1,5 +1,5 @@
-import { toDegrees, nameToString, toHeading } from '../utils'
-import { Shoulder } from './shoulder'
+import { Location } from '../types'
+import { toDegrees, nameToString, toHeading, toLocation } from '../utils'
 
 type SignSize =
   | 'small'
@@ -8,8 +8,7 @@ type SignSize =
   | 'large-distance-remaining'
   | 'small-distance-remaining'
 export type Sign = {
-  lat: number
-  lon: number
+  location: Location
   orientation: number
   size: SignSize
   name?: string
@@ -25,8 +24,7 @@ const signSizeMapping: Record<string, SignSize> = {
 export const parseSign = (data: string[]): Sign => {
   const [lat, lon, orientation, , size, ...name] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     orientation: toHeading(orientation),
     size: signSizeMapping[size],
     name: nameToString(name),

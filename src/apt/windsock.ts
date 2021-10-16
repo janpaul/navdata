@@ -1,16 +1,15 @@
-import { toDegrees, nameToString } from '../utils'
+import { Location } from '../types'
+import { toDegrees, nameToString, toLocation } from '../utils'
 
 export type Windsock = {
-  lat: number
-  lon: number
+  location: Location
   name?: string
 }
 
 export const parseWindsock = (data: string[]): Windsock => {
   const [lat, lon, , ...name] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     name: nameToString(name),
   }
 }

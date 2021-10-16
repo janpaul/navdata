@@ -1,16 +1,13 @@
+import { Location } from '../types'
 import { toDegrees } from '../utils'
 
-export type Node = {
-  lat: number
-  lon: number
-}
-export type BezierNode = Node & {}
+export type BezierNode = Location & {}
 
 const bezierNodes = ['112', '114', '116']
 
 export const parseNode =
   (code: string) =>
-  (data: string[]): Node | BezierNode => {
+  (data: string[]): Location | BezierNode => {
     const [lat, lon, latctrl, lonctrl] = data
     const common = {
       lat: toDegrees(lat),

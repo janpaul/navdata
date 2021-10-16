@@ -1,4 +1,5 @@
-import { toDegrees, toHeading, nameToString } from '../utils'
+import { Location } from '../types'
+import { toDegrees, toHeading, nameToString, toLocation } from '../utils'
 
 type LocationType = 'gate' | 'hangar' | 'misc' | 'tie_down'
 type OperationType =
@@ -22,8 +23,7 @@ type ParkingType =
   | 'food'
   | 'gpu'
 export type StartupLocation = {
-  lat: number
-  lon: number
+  location: Location
   heading: number
   locationType?: LocationType
   aircraftTypes?: AircraftType[]
@@ -35,8 +35,7 @@ export type RampStart = {
   airlines: string[]
 }
 export type TruckParking = {
-  lat: number
-  lon: number
+  location: Location
   orientation: number
   parkingType: ParkingType
   trainLength?: number
@@ -45,8 +44,7 @@ export type TruckParking = {
 export const parseStartupLocation = (data: string[]): StartupLocation => {
   const [lat, lon, heading, ...name] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     heading: toHeading(heading),
     name: nameToString(name),
   }
@@ -54,8 +52,7 @@ export const parseStartupLocation = (data: string[]): StartupLocation => {
 export const parseStartupLocationNew = (data: string[]): StartupLocation => {
   const [lat, lon, heading, locationType, aircraftTypes, ...name] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     heading: toHeading(heading),
     locationType: locationType as LocationType,
     aircraftTypes: aircraftTypes.split('|') as AircraftType[],
@@ -75,8 +72,7 @@ export const parseRampStart = (data: string[]): RampStart => {
 export const parseTruckParking = (data: string[]): TruckParking => {
   const [lat, lon, orientation, parkingType, length, ...name] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     orientation: toHeading(orientation),
     parkingType: parkingType as ParkingType,
     trainLength: Number(length) > 0 ? Number(length) : undefined,

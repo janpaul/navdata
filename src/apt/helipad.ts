@@ -1,11 +1,11 @@
 import { Surface, toSurface } from './surface'
 import { Shoulder, toShoulder } from './shoulder'
-import { toDegrees, toLength, toHeading } from '../utils'
+import { toDegrees, toLength, toHeading, toLocation } from '../utils'
+import { Location } from '../types'
 
 export type Helipad = {
   designator: string
-  lat: number
-  lon: number
+  location: Location
   orientation: number
   length: number
   width: number
@@ -26,8 +26,7 @@ export const parseHelipad = (data: string[]): Helipad => {
   ] = data
   return {
     designator,
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     orientation: toHeading(orientation),
     length: toLength(length),
     width: toLength(width),

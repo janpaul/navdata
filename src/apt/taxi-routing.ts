@@ -1,12 +1,12 @@
-import { toDegrees, nameToString } from '../utils'
+import { Location } from '../types'
+import { toDegrees, nameToString, toLocation } from '../utils'
 
 type TaxiNodeUsage = 'dest' | 'init' | 'both' | 'junc'
 type TaxiDirection = 'twoway' | 'oneway'
 type TaxiEdgeType = 'taxiway' | 'runway' | 'taxiway_F'
 type ActiveZoneClassification = 'arrival' | 'departure' | 'ils'
 type TaxiNode = {
-  lat: number
-  lon: number
+  location: Location
   usage: TaxiNodeUsage
   identifier: number
   name: string
@@ -31,8 +31,7 @@ export type TaxiRouting = {
 export const parseTaxiNode = (data: string[]): TaxiNode => {
   const [lat, lon, usage, identifier, ...name] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     usage: usage as TaxiNodeUsage,
     identifier: Number(identifier),
     name: nameToString(name),

@@ -1,8 +1,8 @@
-import { nameToString, toDegrees, toLength } from '../utils'
+import { Location } from '../types'
+import { nameToString, toDegrees, toLength, toLocation } from '../utils'
 
 export type Viewpoint = {
-  lat: number
-  lon: number
+  location: Location
   height: number
   name?: string
 }
@@ -10,8 +10,7 @@ export type Viewpoint = {
 export const parseViewPoint = (data: string[]): Viewpoint => {
   const [lat, lon, height, , ...name] = data
   return {
-    lat: toDegrees(lat),
-    lon: toDegrees(lon),
+    location: toLocation(toDegrees(lat))(toDegrees(lon)),
     height: toLength(height),
     name: nameToString(name),
   }
